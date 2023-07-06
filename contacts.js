@@ -1,38 +1,45 @@
-// contacts.js
 const fs = require("fs/promises");
+const { nanoid } = require("nanoid");
 const path = require("path");
 
-const contactsPath = path.join(__dirname, "/db/contacts.json");
+const contactsPath = path.join(__dirname, "db", "contacts.json");
 
-// fs.readFile("./db/contacts.json")
-//   .then((data) => console.log("data", data))
-//   .catch((error) => console.log("error", error));
-
-// Раскомментируй и запиши значение
-
-// TODO: задокументировать каждую функцию
-const listContacts = async () => {
-  console.log("listContacts");
-  const data = await fs.readFile(contactsPath);
-  return JSON.parse(data);
-  //   console.log("data2", data2);
-
-  // ...твой код. Возвращает массив контактов.
+const updateList = async (contacts) => {
+  await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
 };
 
-function getContactById(contactId) {
-  console.log("getContactById");
-  // ...твой код. Возвращает объект контакта с таким id. Возвращает null, если объект с таким id не найден.
-}
+const listContacts = async () => {
+  const data = await fs.readFile(contactsPath);
+  return JSON.parse(data);
+};
 
-function removeContact(contactId) {
-  console.log("removeContact");
-  // ...твой код. Возвращает объект удаленного контакта. Возвращает null, если объект с таким id не найден.
-}
+const getContactById = async (contactId) => {
+  const contacts = await listContacts();
+  const contactById = contacts.find((contact) => contact.id === contactId);
+  return contactById || null;
+};
 
-function addContact(name, email, phone) {
+const deleteContact = async (contactId) => {
+  const contacts = await listContacts();
+  const index = contacts.findIndex((contact) => contact.id === contactId);
+  if (index === -1) {
+    return null;
+  }
+  const [result] = contacts.splice(index, 1);
+  updateList(contacts);
+  return result;
+};
+
+const addContact = async (data) => {
   console.log("addContact");
-  // ...твой код. Возвращает объект добавленного контакта.
-}
+  const contacts = await listContacts();
+  const newContact = {
+    id: nanoid(),
+    ...data,
+  };
+  contacts.push(newContact);
+  updateList(contacts);
+  return newContact;
+};
 
-module.exports = { listContacts, getContactById, removeContact, addContact };
+module.exports = { listContacts, getContactById, deleteContact, addContact };
